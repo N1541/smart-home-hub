@@ -1,19 +1,19 @@
-import { Home, ToggleLeft, Activity } from 'lucide-react';
+import { LayoutDashboard, ToggleLeft, Activity } from 'lucide-react';
 
 interface BottomNavProps {
-  activeTab: 'home' | 'control' | 'monitor';
-  onTabChange: (tab: 'home' | 'control' | 'monitor') => void;
+  activeTab: 'dashboard' | 'control' | 'monitor';
+  onTabChange: (tab: 'dashboard' | 'control' | 'monitor') => void;
 }
 
 const BottomNav = ({ activeTab, onTabChange }: BottomNavProps) => {
   const tabs = [
-    { id: 'home' as const, label: 'Home', icon: Home },
+    { id: 'dashboard' as const, label: 'Dashboard', icon: LayoutDashboard },
     { id: 'control' as const, label: 'Control', icon: ToggleLeft },
     { id: 'monitor' as const, label: 'Monitor', icon: Activity },
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 glass-card border-t border-border/50 backdrop-blur-xl">
+    <nav className="fixed bottom-0 left-0 right-0 glass-card border-t border-border/50 backdrop-blur-xl safe-area-bottom">
       <div className="flex justify-around items-center h-16 max-w-lg mx-auto px-4">
         {tabs.map((tab) => {
           const Icon = tab.icon;

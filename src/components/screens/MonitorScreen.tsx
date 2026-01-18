@@ -1,59 +1,18 @@
-import { useEffect, useState } from 'react';
-import { Zap, Activity, Gauge, Battery, RefreshCw, AlertTriangle, Clock } from 'lucide-react';
+import { Zap, Activity, Gauge, Battery, Clock, RefreshCw } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
-import { getStatus, CURRENT_THRESHOLD } from '@/lib/api';
-import SensorCard from '@/components/SensorCard';
-import StatusIndicator from '@/components/StatusIndicator';
-import { toast } from 'sonner';
+import DataCard from '@/components/DataCard';
+import ConnectionStatus from '@/components/ConnectionStatus';
 
 const MonitorScreen = () => {
   const { 
-    espIpAddress, 
+    monitoringData, 
     isConnected, 
-    sensorData, 
-    setSensorData,
-    lastUpdated,
-    setLastUpdated,
-    error,
-    setError
+    isLoading,
+    lastUpdated 
   } = useApp();
-  
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const fetchSensorData = async () => {
-    if (!isConnected || !espIpAddress) return;
-
-    setIsRefreshing(true);
-    try {
-      const data = await getStatus(espIpAddress);
-      setSensorData(data);
-      setLastUpdated(new Date());
-      setError(null);
-
-      // Check for high current warning
-      if (data.current > CURRENT_THRESHOLD) {
-        toast.warning(`High current detected: ${data.current}A`, {
-          duration: 3000,
-        });
-      }
-    } catch (err) {
-      setError('Failed to fetch sensor data');
-    } finally {
-      setIsRefreshing(false);
-    }
-  };
-
-  // Auto-refresh every second
-  useEffect(() => {
-    if (!isConnected) return;
-
-    fetchSensorData();
-    const interval = setInterval(fetchSensorData, 1000);
-
-    return () => clearInterval(interval);
-  }, [isConnected, espIpAddress]);
-
-  const formatTime = (date: Date) => {
+  const formatTime = (date: Date | null) => {
+    if (!date) return 'Never';
     return date.toLocaleTimeString('en-US', {
       hour: '2-digit',
       minute: '2-digit',
@@ -61,116 +20,113 @@ const MonitorScreen = () => {
     });
   };
 
-  const isCurrentHigh = sensorData && sensorData.current > CURRENT_THRESHOLD;
+  // Current threshold for visual warning
+  const CURRENT_THRESHOLD = 5.0;
+  const isCurrentHigh = monitoringData && monitoringData.current > CURRENT_THRESHOLD;
 
   return (
-    <div className="flex flex-col px-6 py-8 animate-fade-in">
+    <div className="flex flex-col px-5 py-6 animate-fade-in">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Energy Monitor</h1>
-          <p className="text-muted-foreground text-sm">Real-time sensor data</p>
+          <h1 className="text-xl font-bold text-foreground">Energy Monitor</h1>
+          <p className="text-sm text-muted-foreground">Real-time sensor data</p>
         </div>
-        <StatusIndicator isConnected={isConnected} />
+        <ConnectionStatus isConnected={isConnected} isLoading={isLoading} />
       </div>
 
-      {/* Last Updated & Refresh */}
-      <div className="flex items-center justify-between mb-6">
-        {lastUpdated && (
-          <div className="flex items-center gap-2 text-muted-foreground text-sm">
-            <Clock className="w-4 h-4" />
-            <span>Last updated: {formatTime(lastUpdated)}</span>
-          </div>
-        )}
-        <button
-          onClick={fetchSensorData}
-          disabled={!isConnected || isRefreshing}
-          className="flex items-center gap-2 px-3 py-2 bg-secondary/50 rounded-lg
-                   text-muted-foreground hover:text-foreground transition-colors
-                   disabled:opacity-50"
-        >
-          <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-          <span className="text-sm">Refresh</span>
-        </button>
+      {/* Last Updated */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2 text-muted-foreground text-sm">
+          <Clock className="w-4 h-4" />
+          <span>Updated: {formatTime(lastUpdated)}</span>
+        </div>
+        <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
+          <RefreshCw className="w-3.5 h-3.5 animate-spin-slow" />
+          <span>Live</span>
+        </div>
       </div>
 
-      {/* Warning Alert */}
+      {/* Loading State */}
+      {isLoading && (
+        <div className="glass-card rounded-xl p-8 text-center mb-4">
+          <RefreshCw className="w-10 h-10 text-muted-foreground mx-auto mb-3 animate-spin" />
+          <p className="text-muted-foreground text-sm">Waiting for data...</p>
+        </div>
+      )}
+
+      {/* High Current Warning */}
       {isCurrentHigh && (
-        <div className="glass-card rounded-xl p-4 mb-6 border-destructive/50 bg-destructive/10 flex items-center gap-3">
-          <AlertTriangle className="w-6 h-6 text-destructive flex-shrink-0" />
+        <div className="mb-4 p-3 rounded-xl bg-destructive/15 border border-destructive/40 flex items-center gap-3">
+          <Activity className="w-5 h-5 text-destructive" />
           <div>
-            <p className="text-destructive font-semibold">High Current Alert!</p>
-            <p className="text-destructive/80 text-sm">
-              Current exceeds safe limit of {CURRENT_THRESHOLD}A
-            </p>
+            <p className="font-semibold text-destructive text-sm">High Current Alert!</p>
+            <p className="text-xs text-destructive/80">Current exceeds {CURRENT_THRESHOLD}A threshold</p>
           </div>
-        </div>
-      )}
-
-      {/* Connection Warning */}
-      {!isConnected && (
-        <div className="glass-card rounded-xl p-4 mb-6 border-warning/50 bg-warning/10">
-          <p className="text-warning text-sm text-center">
-            ⚠️ Connect to ESP32 from the Home tab to view sensor data
-          </p>
-        </div>
-      )}
-
-      {/* Error Alert */}
-      {error && isConnected && (
-        <div className="glass-card rounded-xl p-4 mb-6 border-destructive/50 bg-destructive/10">
-          <p className="text-destructive text-sm text-center">
-            ⚠️ {error}
-          </p>
         </div>
       )}
 
       {/* Sensor Data Grid */}
-      {isConnected && sensorData ? (
-        <div className="grid grid-cols-2 gap-4">
-          <SensorCard
-            icon={<Zap className="w-5 h-5" />}
+      {isConnected && !isLoading ? (
+        <div className="grid grid-cols-2 gap-3">
+          <DataCard
+            icon={<Zap className="w-4 h-4" />}
             label="Voltage"
-            value={sensorData.voltage}
+            value={monitoringData?.voltage ?? null}
             unit="V"
           />
-          <SensorCard
-            icon={<Activity className="w-5 h-5" />}
+          <DataCard
+            icon={<Activity className="w-4 h-4" />}
             label="Current"
-            value={sensorData.current}
+            value={monitoringData?.current ?? null}
             unit="A"
             isWarning={isCurrentHigh}
           />
-          <SensorCard
-            icon={<Gauge className="w-5 h-5" />}
+          <DataCard
+            icon={<Gauge className="w-4 h-4" />}
             label="Power"
-            value={sensorData.power}
+            value={monitoringData?.power ?? null}
             unit="W"
           />
-          <SensorCard
-            icon={<Battery className="w-5 h-5" />}
+          <DataCard
+            icon={<Battery className="w-4 h-4" />}
             label="Energy"
-            value={sensorData.energy}
+            value={monitoringData?.energy ?? null}
             unit="kWh"
           />
         </div>
-      ) : isConnected ? (
-        <div className="glass-card rounded-2xl p-8 text-center">
-          <RefreshCw className="w-12 h-12 text-muted-foreground mx-auto mb-4 animate-spin" />
-          <p className="text-muted-foreground">Loading sensor data...</p>
+      ) : !isLoading ? (
+        <div className="glass-card rounded-xl p-8 text-center">
+          <Gauge className="w-12 h-12 text-muted-foreground mx-auto mb-3 opacity-50" />
+          <p className="text-muted-foreground font-medium">No data available</p>
+          <p className="text-muted-foreground text-sm mt-1">Check Firebase connection</p>
         </div>
-      ) : (
-        <div className="glass-card rounded-2xl p-8 text-center">
-          <Gauge className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-50" />
-          <p className="text-muted-foreground">No data available</p>
-          <p className="text-muted-foreground text-sm mt-2">Connect to ESP32 to see readings</p>
+      ) : null}
+
+      {/* Total Energy Highlight */}
+      {monitoringData && isConnected && (
+        <div className="mt-4 glass-card rounded-xl p-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">Total Energy Consumed</p>
+              <div className="flex items-baseline gap-2 mt-1">
+                <span className="text-3xl font-bold text-primary">
+                  {monitoringData.energy?.toFixed(3) || '0.000'}
+                </span>
+                <span className="text-muted-foreground">kWh</span>
+              </div>
+            </div>
+            <div className="p-3 rounded-xl bg-primary/15">
+              <Battery className="w-8 h-8 text-primary" />
+            </div>
+          </div>
         </div>
       )}
 
       {/* Info Footer */}
-      <div className="mt-8 text-center text-muted-foreground text-xs">
-        <p>Data refreshes automatically every second</p>
-        <p className="mt-1">Current threshold: {CURRENT_THRESHOLD}A</p>
+      <div className="mt-6 text-center text-muted-foreground text-xs space-y-1">
+        <p>Data synced via Firebase Realtime Database</p>
+        <p>ESP32 → Firebase → This App</p>
       </div>
     </div>
   );

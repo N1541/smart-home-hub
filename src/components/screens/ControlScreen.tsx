@@ -1,156 +1,159 @@
-import { useState } from 'react';
-import { Lightbulb, Fan, Power, PowerOff } from 'lucide-react';
+import { Lightbulb, Fan, Droplets, Settings2, Lock } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
-import { controlLight, controlFan } from '@/lib/api';
-import ControlButton from '@/components/ControlButton';
-import StatusIndicator from '@/components/StatusIndicator';
+import ToggleCard from '@/components/ToggleCard';
+import ConnectionStatus from '@/components/ConnectionStatus';
 import { toast } from 'sonner';
 
 const ControlScreen = () => {
   const { 
-    espIpAddress, 
+    controlData, 
     isConnected, 
-    lightStatus, 
-    setLightStatus, 
-    fanStatus, 
-    setFanStatus 
+    isLoading,
+    setLight,
+    setFan,
+    setPump,
+    setMode
   } = useApp();
-  
-  const [isLightLoading, setIsLightLoading] = useState(false);
-  const [isFanLoading, setIsFanLoading] = useState(false);
 
-  const handleLightControl = async (turnOn: boolean) => {
-    if (!isConnected) {
-      toast.error('Not connected to ESP32');
-      return;
-    }
+  const isAutoMode = controlData?.mode === 'AUTO';
 
-    setIsLightLoading(true);
-    try {
-      const success = await controlLight(espIpAddress, turnOn);
-      if (success) {
-        setLightStatus(turnOn);
-        toast.success(`Light turned ${turnOn ? 'ON' : 'OFF'}`);
-      } else {
-        toast.error('Failed to control light');
-      }
-    } catch (err) {
-      toast.error('Connection error. Check ESP32.');
-    } finally {
-      setIsLightLoading(false);
-    }
+  const handleLightToggle = async (value: boolean) => {
+    if (isAutoMode) return;
+    await setLight(value ? 'ON' : 'OFF');
+    toast.success(`Light turned ${value ? 'ON' : 'OFF'}`);
   };
 
-  const handleFanControl = async (turnOn: boolean) => {
-    if (!isConnected) {
-      toast.error('Not connected to ESP32');
-      return;
-    }
+  const handleFanToggle = async (value: boolean) => {
+    if (isAutoMode) return;
+    await setFan(value ? 'ON' : 'OFF');
+    toast.success(`Fan turned ${value ? 'ON' : 'OFF'}`);
+  };
 
-    setIsFanLoading(true);
-    try {
-      const success = await controlFan(espIpAddress, turnOn);
-      if (success) {
-        setFanStatus(turnOn);
-        toast.success(`Fan turned ${turnOn ? 'ON' : 'OFF'}`);
-      } else {
-        toast.error('Failed to control fan');
-      }
-    } catch (err) {
-      toast.error('Connection error. Check ESP32.');
-    } finally {
-      setIsFanLoading(false);
-    }
+  const handlePumpToggle = async (value: boolean) => {
+    if (isAutoMode) return;
+    await setPump(value ? 'ON' : 'OFF');
+    toast.success(`Pump turned ${value ? 'ON' : 'OFF'}`);
+  };
+
+  const handleModeToggle = async (value: boolean) => {
+    await setMode(value ? 'AUTO' : 'MANUAL');
+    toast.success(`Mode set to ${value ? 'AUTO' : 'MANUAL'}`);
   };
 
   return (
-    <div className="flex flex-col px-6 py-8 animate-fade-in">
+    <div className="flex flex-col px-5 py-6 animate-fade-in">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Device Control</h1>
-          <p className="text-muted-foreground text-sm">Manage your smart devices</p>
+          <h1 className="text-xl font-bold text-foreground">Device Control</h1>
+          <p className="text-sm text-muted-foreground">Manage your smart devices</p>
         </div>
-        <StatusIndicator isConnected={isConnected} />
+        <ConnectionStatus isConnected={isConnected} isLoading={isLoading} />
       </div>
 
-      {!isConnected && (
-        <div className="glass-card rounded-xl p-4 mb-6 border-warning/50 bg-warning/10">
-          <p className="text-warning text-sm text-center">
-            ⚠️ Connect to ESP32 from the Home tab first
-          </p>
+      {/* Auto Mode Warning */}
+      {isAutoMode && (
+        <div className="mb-4 p-3 rounded-xl bg-success/10 border border-success/30 flex items-center gap-3">
+          <Lock className="w-5 h-5 text-success" />
+          <div>
+            <p className="font-semibold text-success text-sm">Auto Mode Active</p>
+            <p className="text-xs text-success/80">Manual controls are disabled</p>
+          </div>
         </div>
       )}
 
-      {/* Light Control Section */}
-      <div className="glass-card rounded-2xl p-6 mb-6">
-        <div className="flex items-center gap-3 mb-6">
-          <div className={`p-2 rounded-lg ${lightStatus ? 'bg-primary/30 text-primary' : 'bg-secondary text-muted-foreground'}`}>
-            <Lightbulb className="w-6 h-6" />
-          </div>
-          <div>
-            <h2 className="font-semibold text-foreground">Light Control</h2>
-            <p className="text-sm text-muted-foreground">
-              Status: <span className={lightStatus ? 'text-primary' : 'text-muted-foreground'}>{lightStatus ? 'ON' : 'OFF'}</span>
-            </p>
-          </div>
+      {/* Loading State */}
+      {isLoading && (
+        <div className="glass-card rounded-xl p-6 text-center mb-4">
+          <p className="text-muted-foreground text-sm">Waiting for data...</p>
         </div>
+      )}
 
-        <div className="flex gap-4 justify-center">
-          <ControlButton
-            variant="light-on"
-            isActive={lightStatus}
-            isLoading={isLightLoading}
-            disabled={!isConnected}
-            icon={<Power className="w-full h-full" />}
-            label="Turn ON"
-            onClick={() => handleLightControl(true)}
-          />
-          <ControlButton
-            variant="light-off"
-            isLoading={isLightLoading}
-            disabled={!isConnected}
-            icon={<PowerOff className="w-full h-full" />}
-            label="Turn OFF"
-            onClick={() => handleLightControl(false)}
-          />
+      {/* Mode Control */}
+      <div className="mb-6">
+        <p className="text-xs text-muted-foreground uppercase tracking-wide mb-3 px-1">System Mode</p>
+        <div className="glass-card rounded-xl p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className={`p-2.5 rounded-lg transition-colors ${
+                isAutoMode ? 'bg-success/20 text-success' : 'bg-primary/20 text-primary'
+              }`}>
+                <Settings2 className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-foreground">Operation Mode</h3>
+                <p className={`text-sm font-medium ${
+                  isAutoMode ? 'text-success' : 'text-primary'
+                }`}>
+                  {isAutoMode ? 'Automatic Control' : 'Manual Control'}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className={`text-xs font-medium ${!isAutoMode ? 'text-primary' : 'text-muted-foreground'}`}>
+                MANUAL
+              </span>
+              <button
+                onClick={() => handleModeToggle(!isAutoMode)}
+                className={`
+                  relative w-14 h-7 rounded-full transition-colors duration-200
+                  ${isAutoMode ? 'bg-success' : 'bg-secondary'}
+                `}
+              >
+                <div className={`
+                  absolute top-1 w-5 h-5 rounded-full bg-white shadow transition-transform duration-200
+                  ${isAutoMode ? 'translate-x-8' : 'translate-x-1'}
+                `} />
+              </button>
+              <span className={`text-xs font-medium ${isAutoMode ? 'text-success' : 'text-muted-foreground'}`}>
+                AUTO
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Fan Control Section */}
-      <div className="glass-card rounded-2xl p-6">
-        <div className="flex items-center gap-3 mb-6">
-          <div className={`p-2 rounded-lg ${fanStatus ? 'bg-accent/30 text-accent' : 'bg-secondary text-muted-foreground'}`}>
-            <Fan className={`w-6 h-6 ${fanStatus ? 'animate-spin-slow' : ''}`} />
-          </div>
-          <div>
-            <h2 className="font-semibold text-foreground">Fan Control</h2>
-            <p className="text-sm text-muted-foreground">
-              Status: <span className={fanStatus ? 'text-accent' : 'text-muted-foreground'}>{fanStatus ? 'ON' : 'OFF'}</span>
-            </p>
-          </div>
-        </div>
+      {/* Device Controls */}
+      <div className="space-y-3">
+        <p className="text-xs text-muted-foreground uppercase tracking-wide mb-3 px-1">Devices</p>
+        
+        <ToggleCard
+          icon={<Lightbulb className="w-5 h-5" />}
+          label="Light"
+          description="Room lighting control"
+          isOn={controlData?.light === 'ON'}
+          onToggle={handleLightToggle}
+          disabled={isAutoMode || !isConnected}
+          variant="light"
+        />
 
-        <div className="flex gap-4 justify-center">
-          <ControlButton
-            variant="fan-on"
-            isActive={fanStatus}
-            isLoading={isFanLoading}
-            disabled={!isConnected}
-            icon={<Fan className="w-full h-full" />}
-            label="Turn ON"
-            onClick={() => handleFanControl(true)}
-          />
-          <ControlButton
-            variant="fan-off"
-            isLoading={isFanLoading}
-            disabled={!isConnected}
-            icon={<PowerOff className="w-full h-full" />}
-            label="Turn OFF"
-            onClick={() => handleFanControl(false)}
-          />
-        </div>
+        <ToggleCard
+          icon={<Fan className={`w-5 h-5 ${controlData?.fan === 'ON' ? 'animate-spin-slow' : ''}`} />}
+          label="Fan"
+          description="Ceiling fan control"
+          isOn={controlData?.fan === 'ON'}
+          onToggle={handleFanToggle}
+          disabled={isAutoMode || !isConnected}
+          variant="fan"
+        />
+
+        <ToggleCard
+          icon={<Droplets className="w-5 h-5" />}
+          label="Water Pump"
+          description="Water pump control"
+          isOn={controlData?.pump === 'ON'}
+          onToggle={handlePumpToggle}
+          disabled={isAutoMode || !isConnected}
+          variant="pump"
+        />
       </div>
+
+      {/* Info Footer */}
+      {!isConnected && !isLoading && (
+        <div className="mt-6 p-3 rounded-xl bg-warning/10 border border-warning/30 text-center">
+          <p className="text-warning text-sm">⚠️ Not connected to Firebase</p>
+        </div>
+      )}
     </div>
   );
 };
