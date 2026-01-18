@@ -1,23 +1,23 @@
 import { useState } from 'react';
 import { AppProvider } from '@/contexts/AppContext';
 import BottomNav from '@/components/BottomNav';
-import HomeScreen from '@/components/screens/HomeScreen';
+import DashboardScreen from '@/components/screens/DashboardScreen';
 import ControlScreen from '@/components/screens/ControlScreen';
 import MonitorScreen from '@/components/screens/MonitorScreen';
 
 const SmartHomeApp = () => {
-  const [activeTab, setActiveTab] = useState<'home' | 'control' | 'monitor'>('home');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'control' | 'monitor'>('dashboard');
 
   const renderScreen = () => {
     switch (activeTab) {
-      case 'home':
-        return <HomeScreen />;
+      case 'dashboard':
+        return <DashboardScreen />;
       case 'control':
         return <ControlScreen />;
       case 'monitor':
         return <MonitorScreen />;
       default:
-        return <HomeScreen />;
+        return <DashboardScreen />;
     }
   };
 
