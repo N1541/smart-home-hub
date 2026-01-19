@@ -18,9 +18,11 @@ const ControlScreen = () => {
 
   const isAutoMode = controlData?.mode === 'AUTO';
 
+  // Invert light logic: Firebase ON = Display OFF, Firebase OFF = Display ON
   const handleLightToggle = async (value: boolean) => {
     if (isAutoMode) return;
-    await setLight(value ? 'ON' : 'OFF');
+    // Invert: when user turns ON in UI, send OFF to Firebase
+    await setLight(value ? 'OFF' : 'ON');
     toast.success(`Light turned ${value ? 'ON' : 'OFF'}`);
   };
 
@@ -123,7 +125,7 @@ const ControlScreen = () => {
           icon={<Lightbulb className="w-5 h-5" />}
           label="Light"
           description="Room lighting control"
-          isOn={controlData?.light === 'ON'}
+          isOn={controlData?.light === 'OFF'}
           onToggle={handleLightToggle}
           disabled={isAutoMode || !isConnected}
           variant="light"
