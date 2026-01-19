@@ -13,8 +13,7 @@ const ControlScreen = () => {
     setLight,
     setFan,
     setPump,
-    setMode,
-    setFire
+    setMode
   } = useApp();
 
   const isAutoMode = controlData?.mode === 'AUTO';
@@ -42,10 +41,6 @@ const ControlScreen = () => {
     toast.success(`Mode set to ${value ? 'AUTO' : 'MANUAL'}`);
   };
 
-  const handleFireToggle = async (value: boolean) => {
-    await setFire(value);
-    toast.success(`Fire alert ${value ? 'activated' : 'deactivated'}`);
-  };
 
   return (
     <div className="flex flex-col px-5 py-6 animate-fade-in">
@@ -154,15 +149,29 @@ const ControlScreen = () => {
           variant="pump"
         />
 
-        <ToggleCard
-          icon={<Flame className={`w-5 h-5 ${statusData?.fire ? 'animate-pulse' : ''}`} />}
-          label="Fire Alert"
-          description="Fire detection status"
-          isOn={statusData?.fire === true}
-          onToggle={handleFireToggle}
-          disabled={!isConnected}
-          variant="fire"
-        />
+        {/* Fire Alert - Read-only status display */}
+        <div className="glass-card rounded-xl p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className={`p-2.5 rounded-lg transition-colors ${
+                statusData?.fire ? 'bg-destructive/20 text-destructive' : 'bg-secondary text-muted-foreground'
+              }`}>
+                <Flame className={`w-5 h-5 ${statusData?.fire ? 'animate-pulse' : ''}`} />
+              </div>
+              <div>
+                <h3 className="font-semibold text-foreground">Fire Alert</h3>
+                <p className="text-xs text-muted-foreground">Fire detection status</p>
+              </div>
+            </div>
+            <div className={`px-3 py-1.5 rounded-full text-xs font-semibold ${
+              statusData?.fire 
+                ? 'bg-destructive/20 text-destructive' 
+                : 'bg-success/20 text-success'
+            }`}>
+              {statusData?.fire ? '🔥 DETECTED' : '✓ SAFE'}
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Info Footer */}
