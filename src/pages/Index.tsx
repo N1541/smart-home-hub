@@ -1,11 +1,10 @@
 import { useState } from 'react';
-import { AppProvider } from '@/contexts/AppContext';
 import BottomNav from '@/components/BottomNav';
 import DashboardScreen from '@/components/screens/DashboardScreen';
 import ControlScreen from '@/components/screens/ControlScreen';
 import MonitorScreen from '@/components/screens/MonitorScreen';
 
-const SmartHomeApp = () => {
+const Index = () => {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'control' | 'monitor'>('dashboard');
 
   const renderScreen = () => {
@@ -28,14 +27,6 @@ const SmartHomeApp = () => {
       </div>
       <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
     </div>
-  );
-};
-
-const Index = () => {
-  return (
-    <AppProvider>
-      <SmartHomeApp />
-    </AppProvider>
   );
 };
 
