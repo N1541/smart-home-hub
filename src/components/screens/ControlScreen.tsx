@@ -1,4 +1,4 @@
-import { Lightbulb, Fan, Droplets, Settings2, Lock } from 'lucide-react';
+import { Lightbulb, Fan, Droplets, Settings2, Lock, Flame } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
 import ToggleCard from '@/components/ToggleCard';
 import ConnectionStatus from '@/components/ConnectionStatus';
@@ -7,12 +7,14 @@ import { toast } from 'sonner';
 const ControlScreen = () => {
   const { 
     controlData, 
+    statusData,
     isConnected, 
     isLoading,
     setLight,
     setFan,
     setPump,
-    setMode
+    setMode,
+    setFire
   } = useApp();
 
   const isAutoMode = controlData?.mode === 'AUTO';
@@ -38,6 +40,11 @@ const ControlScreen = () => {
   const handleModeToggle = async (value: boolean) => {
     await setMode(value ? 'AUTO' : 'MANUAL');
     toast.success(`Mode set to ${value ? 'AUTO' : 'MANUAL'}`);
+  };
+
+  const handleFireToggle = async (value: boolean) => {
+    await setFire(value);
+    toast.success(`Fire alert ${value ? 'activated' : 'deactivated'}`);
   };
 
   return (
@@ -145,6 +152,16 @@ const ControlScreen = () => {
           onToggle={handlePumpToggle}
           disabled={isAutoMode || !isConnected}
           variant="pump"
+        />
+
+        <ToggleCard
+          icon={<Flame className={`w-5 h-5 ${statusData?.fire ? 'animate-pulse' : ''}`} />}
+          label="Fire Alert"
+          description="Fire detection status"
+          isOn={statusData?.fire === true}
+          onToggle={handleFireToggle}
+          disabled={!isConnected}
+          variant="fire"
         />
       </div>
 

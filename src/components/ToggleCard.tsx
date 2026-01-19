@@ -8,7 +8,7 @@ interface ToggleCardProps {
   isOn: boolean;
   onToggle: (value: boolean) => void;
   disabled?: boolean;
-  variant?: 'light' | 'fan' | 'pump' | 'mode';
+  variant?: 'light' | 'fan' | 'pump' | 'mode' | 'fire';
 }
 
 const ToggleCard = ({ 
@@ -27,6 +27,7 @@ const ToggleCard = ({
       case 'fan': return 'bg-accent/20 text-accent';
       case 'pump': return 'bg-blue-500/20 text-blue-400';
       case 'mode': return 'bg-success/20 text-success';
+      case 'fire': return 'bg-destructive/20 text-destructive';
       default: return 'bg-primary/20 text-primary';
     }
   };
@@ -38,6 +39,7 @@ const ToggleCard = ({
       case 'fan': return 'text-accent';
       case 'pump': return 'text-blue-400';
       case 'mode': return 'text-success';
+      case 'fire': return 'text-destructive';
       default: return 'text-primary';
     }
   };
