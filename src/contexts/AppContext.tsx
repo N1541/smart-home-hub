@@ -38,6 +38,7 @@ interface AppContextType {
   setFan: (value: 'ON' | 'OFF') => Promise<void>;
   setPump: (value: 'ON' | 'OFF') => Promise<void>;
   setMode: (value: 'AUTO' | 'MANUAL') => Promise<void>;
+  setFire: (value: boolean) => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -129,6 +130,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [controlData]);
 
+  const setFire = useCallback(async (value: boolean) => {
+    try {
+      await set(statusRef, { ...statusData, fire: value });
+    } catch (err) {
+      setError('Failed to update fire status');
+    }
+  }, [statusData]);
+
   return (
     <AppContext.Provider
       value={{
@@ -143,6 +152,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setFan,
         setPump,
         setMode,
+        setFire,
       }}
     >
       {children}
