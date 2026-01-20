@@ -1,6 +1,5 @@
 import { 
   Home, 
-  Flame, 
   Droplets, 
   Lightbulb, 
   Fan, 
@@ -30,8 +29,6 @@ const DashboardScreen = () => {
     });
   };
 
-  const isFireAlert = statusData?.fire === true;
-
   return (
     <div className="flex flex-col px-5 py-6 animate-fade-in">
       {/* Header */}
@@ -47,17 +44,6 @@ const DashboardScreen = () => {
         </div>
         <ConnectionStatus isConnected={isConnected} isLoading={isLoading} />
       </div>
-
-      {/* Fire Alert Banner */}
-      {isFireAlert && (
-        <div className="mb-4 p-4 rounded-xl bg-destructive/20 border border-destructive/50 flex items-center gap-3 animate-pulse">
-          <Flame className="w-6 h-6 text-destructive" />
-          <div>
-            <p className="font-bold text-destructive">🔥 FIRE DETECTED!</p>
-            <p className="text-sm text-destructive/80">Immediate attention required</p>
-          </div>
-        </div>
-      )}
 
       {/* Loading State */}
       {isLoading && (

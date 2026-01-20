@@ -1,4 +1,4 @@
-import { Lightbulb, Fan, Droplets, Settings2, Lock, Flame } from 'lucide-react';
+import { Lightbulb, Fan, Droplets, Settings2, Lock } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
 import ToggleCard from '@/components/ToggleCard';
 import ConnectionStatus from '@/components/ConnectionStatus';
@@ -151,29 +151,6 @@ const ControlScreen = () => {
           variant="pump"
         />
 
-        {/* Fire Alert - Read-only status display */}
-        <div className="glass-card rounded-xl p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className={`p-2.5 rounded-lg transition-colors ${
-                statusData?.fire ? 'bg-destructive/20 text-destructive' : 'bg-secondary text-muted-foreground'
-              }`}>
-                <Flame className={`w-5 h-5 ${statusData?.fire ? 'animate-pulse' : ''}`} />
-              </div>
-              <div>
-                <h3 className="font-semibold text-foreground">Fire Alert</h3>
-                <p className="text-xs text-muted-foreground">Fire detection status</p>
-              </div>
-            </div>
-            <div className={`px-3 py-1.5 rounded-full text-xs font-semibold ${
-              statusData?.fire 
-                ? 'bg-destructive/20 text-destructive' 
-                : 'bg-success/20 text-success'
-            }`}>
-              {statusData?.fire ? '🔥 DETECTED' : '✓ SAFE'}
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* Info Footer */}
